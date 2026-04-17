@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild Wars League</title>
+    <style>
+        :root {
+            --crimson: #990000;
+            --blood: #660000;
+            --black: #0a0a0a;
+            --gray: #1a1a1a;
+            --text: #e0e0e0;
+            --accent: #ff3333;
+        }
+
+        body {
+            font-family: 'Constantia', 'Georgia', serif;
+            background-color: var(--black);
+            background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
+                              url('https://www.transparenttextures.com/patterns/dark-matter.png');
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        h1 {
+            color: var(--crimson);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            border-bottom: 2px solid var(--crimson);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 2.5rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--gray);
+            border: 2px solid var(--blood);
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(153, 0, 0, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background-color: var(--blood);
+            color: white;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            padding: 15px;
+        }
+
+        td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        tr:nth-child(even) { background-color: #121212; }
+        tr:hover { background-color: #1f1111; border-left: 4px solid var(--accent); }
+
+        .guild-name {
+            text-align: left;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        /* Admin UI */
+        #adminToggle {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #222;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .admin-panel {
+            background: var(--gray);
+            padding: 20px;
+            border: 2px solid var(--crimson);
+            margin-top: 20px;
+            border-radius: 4px;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .hidden { display: none; }
+
+        label { font-size: 0.85rem; color: #aaa; text-transform: uppercase; }
+
+        input, select {
+            background: #000;
+            border: 1px solid var(--blood);
+            color: white;
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background: var(--crimson);
+            color: white;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .btn:hover { background: var(--accent); }
+
+        .form-row { display: flex; gap: 10px; }
+        .form-row div { flex: 1; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6rem; }
+            td, th { padding: 10px 5px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⚔️ Guild Wars League ⚔️</h1>
+
+    <div class="table-wrapper">
+        <table id="leagueTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th style="text-align:left">Guild Name</th>
+                    <th>Played</th>
+                    <th>Won</th>
+                    <th>Lost</th>
+                    <th>P/D</th>
+                    <th>Kills</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody id="leagueBody"></tbody>
+        </table>
+    </div>
+
+    <button id="adminToggle" onclick="toggleLogin()">🔒 Admin Access</button>
+
+    <div id="loginSection" class="admin-panel hidden">
+        <input type="password" id="passInput" placeholder="Password">
+        <button class="btn" onclick="verifyAdmin()">Unlock</button>
+    </div>
+
+    <div id="managementPanel" class="admin-panel hidden">
+        <h3 style="color:var(--crimson); margin:0 0 15px 0; text-align:center;">WAR REPORT</h3>
+        
+        <label>Winner</label>
+        <select id="winGuild"></select>
+        
+        <label>Loser</label>
+        <select id="loseGuild"></select>
+
+        <div class="form-row">
+            <div>
+                <label>Winner Kills</label>
+                <input type="number" id="winKills" placeholder="0">
+            </div>
+            <div>
+                <label>Loser Kills</label>
+                <input type="number" id="loseKills" placeholder="0">
+            </div>
+        </div>
+
+        <div style="border: 1px solid #333; padding: 10px; margin-bottom: 15px;">
+            <p style="margin:0 0 10px 0; font-size: 0.8rem; text-align: center; color: var(--crimson)">POINT DIFFERENCE CALCULATION</p>
+            <div class="form-row">
+                <div>
+                    <label>Winner Score</label>
+                    <input type="number" id="winScore" placeholder="0">
+                </div>
+                <div>
+                    <label>Loser Score</label>
+                    <input type="number" id="loseScore" placeholder="0">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="submitResult()">Update League</button>
+        <button class="btn" style="background:#222; margin-top:10px" onclick="logout()">Close</button>
+    </div>
+</div>
+
+<script>
+    const guildNames = [
+        "27 Outlaws 1", "27 Outlaws 2", "Bop House", "Catastrophic 1", "Catastrophic 2",
+        "Fear us 1", "Fear us 2", "Nightraiders", "Perc", "Pielkops", "Price King",
+        "Prime Era", "Sanctuary", "SK nxt lvl 1", "SK nxt lvl 2", "Sp Esports",
+        "Takealot", "The Farm 1", "The Farm 2", "Vanquish X", "X Empire", "Zz brashx"
+    ].sort();
+
+    let leagueData = JSON.parse(localStorage.getItem('gwLeague_Final')) || guildNames.map(name => ({
+        name: name, played: 0, won: 0, lost: 0, pd: 0, kills: 0, points: 0
+    }));
+
+    function renderTable() {
+        const body = document.getElementById('leagueBody');
+        const winSelect = document.getElementById('winGuild');
+        const loseSelect = document.getElementById('loseGuild');
+        
+        // Sort by Points > Kills > PD
+        leagueData.sort((a, b) => b.points - a.points || b.kills - a.kills || b.pd - a.pd);
+        
+        body.innerHTML = '';
+        const sortedAlpha = [...leagueData].sort((a,b) => a.name.localeCompare(b.name));
+        winSelect.innerHTML = sortedAlpha.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+        loseSelect.innerHTML = sortedAlpha.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+
+        leagueData.forEach((g, i) => {
+            body.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td class="guild-name">${g.name}</td>
+                    <td>${g.played}</td>
+                    <td>${g.won}</td>
+                    <td>${g.lost}</td>
+                    <td>${g.pd}</td>
+                    <td>${g.kills}</td>
+                    <td style="color:var(--accent); font-weight:bold">${g.points}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function toggleLogin() { document.getElementById('loginSection').classList.toggle('hidden'); }
+
+    function verifyAdmin() {
+        if (document.getElementById('passInput').value === "Hydra15") {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('managementPanel').classList.remove('hidden');
+        } else { alert("Access Denied."); }
+    }
+
+    function submitResult() {
+        const wName = document.getElementById('winGuild').value;
+        const lName = document.getElementById('loseGuild').value;
+        const wk = parseInt(document.getElementById('winKills').value) || 0;
+        const lk = parseInt(document.getElementById('loseKills').value) || 0;
+        const ws = parseInt(document.getElementById('winScore').value) || 0;
+        const ls = parseInt(document.getElementById('loseScore').value) || 0;
+
+        if (wName === lName) return alert("Select two different guilds.");
+
+        // Calculate PD
+        const calculatedPD = ws - ls;
+
+        const winner = leagueData.find(g => g.name === wName);
+        const loser = leagueData.find(g => g.name === lName);
+
+        winner.played += 1; winner.won += 1; winner.points += 3;
+        winner.kills += wk; winner.pd += calculatedPD;
+
+        loser.played += 1; loser.lost += 1;
+        loser.kills += lk; loser.pd -= calculatedPD;
+
+        localStorage.setItem('gwLeague_Final', JSON.stringify(leagueData));
+        renderTable();
+        alert(`Recorded! Point Difference: ${calculatedPD}`);
+        
+        // Clear scores
+        ['winKills','loseKills','winScore','loseScore'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function logout() {
+        document.getElementById('managementPanel').classList.add('hidden');
+        document.getElementById('passInput').value = '';
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
